@@ -9,42 +9,49 @@
     <div class="container container--narrow page-section">
     <div class="metabox metabox--position-up metabox--with-home-link">
                 <p>
-                  <a class="metabox__blog-home-link" href="<?php echo get_post_type_archive_link('program');?>"><i class="fa fa-home" aria-hidden="true"></i> All Programs</a> <span class="metabox__main"><? the_title(); ?></span>
+                  <a class="metabox__blog-home-link" href="<?php echo get_post_type_archive_link('campus');?>"><i class="fa fa-home" aria-hidden="true"></i> All Campuses</a> <span class="metabox__main"><? the_title(); ?></span>
                 </p>
               </div>
               
         <div class="generic-content">
             <?php the_content();?>
         </div>
+
+        <?php $mapLocation = get_field('map_location'); ?>
+        <div class="acf-map">
+            <div class="marker" data-lat="<?php echo $mapLocation['lat']?>" data-lng="<?php echo $mapLocation['lng']?>">
+                <h3><?php the_title(); ?></h3>
+                <?php echo $mapLocation['address']; ?>
+            </div>
+    </div>
        
         <?php 
 
 $today = date('Ymd');
-$relatedProfessors = new WP_Query(array(
+$relatedPrograms = new WP_Query(array(
     'posts_per_page' => -1,
-    'post_type' => 'professor',
+    'post_type' => 'program',
     'orderby' => 'title',
     'order' => 'ASC',
     'meta_query' => array(
         array(
-          'key', 'related_programs',
+          'key', 'related_campus',
           'compare' => 'LIKE',
           'value' => '"' . get_the_ID() . '"'
         )
     )
 ));
 
-  if($relatedProfessors->have_posts()){
+  if($relatedPrograms->have_posts()){
     echo '<hr class="section-break">';
-    echo '<h2 class="headline headline--medium">' . get_the_title() . ' Professors</h2>';
+    echo '<h2 class="headline headline--medium">Programs Available At This Campus</h2>';
 
-    echo '<ul class="professor-cards">';
-    while($relatedProfessors->have_posts()){
-        $relatedProfessors->the_post(); ?>
-        <li class="professor-card__list-item">
-          <a class="professor-card" href="<?php the_permalink(); ?>">
-              <img class="professor-card__image" src="<?php the_post_thumbnail(); ?>">
-              <span class="professor-card__name"><?php the_title(); ?></span>
+    echo '<ul class="min-list link-list">';
+    while($relatedPrograms->have_posts()){
+        $relatedPrograms->the_post(); ?>
+        <li>
+          <a href="<?php the_permalink(); ?>">
+            <?php the_title(); ?>
           </a>
         </li>
     <?php  }
@@ -83,12 +90,6 @@ $relatedProfessors = new WP_Query(array(
                 $homePageEvents->the_post();
                 get_template_part('template-parts/content-event');
               }
-           }
-           wp_rest_postdata();
-           $relatedCampuses = get_field('related_campus');
-
-           if($relatedCampuses){
-              echo '<h2>' . get_the_title() . 'Is Available At These Campuses</h2>'
            }
           ?>
     </div>

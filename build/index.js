@@ -187,6 +187,7 @@ __webpack_require__.r(__webpack_exports__);
 class Search {
   // Describe and initiate our object
   constructor() {
+    this.addSearchHTMl();
     this.openButton = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".js-search-trigger");
     this.closeButton = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".search-overlay__close");
     this.searchOverlay = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".search-overlay");
@@ -216,7 +217,7 @@ class Search {
           this.resultsDiv.html('<div class="spinner-loader"></div>');
           this.isSpinnerVisible = true;
         }
-        this.typingTimer = setTimeout(this.getResults.bind(this), 2000);
+        this.typingTimer = setTimeout(this.getResults.bind(this), 750);
       } else {
         this.resultsDiv.html('');
         this.isSpinnerVisible = false;
@@ -226,21 +227,27 @@ class Search {
   }
   getResults() {
     jquery__WEBPACK_IMPORTED_MODULE_0___default().getJSON('http://fictional-university.local/wp-json/wp/v2/posts?search=' + this.searchField.val(), posts => {
-      var testArray = ['red', 'orange', 'yellow'];
-      this.resultsDiv.html(`
+      jquery__WEBPACK_IMPORTED_MODULE_0___default().getJSON('http://fictional-university.local/wp-json/wp/v2/pages?search=' + this.searchField.val(), pages => {
+        var combinedResults = posts.concat(pages);
+        this.resultsDiv.html(`
                 <h2 class="search-overlay__section-title">General Information</h2>
-                ${posts.length ? '<ul class="link-list min-list">' : '<p>No general information matches that search</p>'}
-                    ${posts.map(item => {
-        return `<li><a href="${item.link}">${item.title.rendered}</a></li>`;
-      }).join('')}
-                ${posts.length ? '</ul>' : ''}
+                ${combinedResults.length ? '<ul class="link-list min-list">' : '<p>No general information matches that search</p>'}
+                    ${combinedResults.map(item => {
+          return `<li><a href="${item.link}">${item.title.rendered}</a> ${item.type == 'post' ? `by ${item.authorName}` : ''}</li>`;
+        }).join('')}
+                ${combinedResults.length ? '</ul>' : ''}
             `);
-      this.isSpinnerVisible = false;
+        this.isSpinnerVisible = false;
+      });
     });
   }
   openOverlay() {
     this.searchOverlay.addClass("search-overlay--active");
     jquery__WEBPACK_IMPORTED_MODULE_0___default()('body').addClass("body-no-scroll");
+    this.searchField.val('');
+    setTimeout(() => {
+      this.searchField.focus();
+    }, 301);
     this.isOverlayOpen = true;
   }
   closeOverlay() {
@@ -255,6 +262,22 @@ class Search {
     if (e.keyCode === 27 && this.isOverlayOpen) {
       this.closeOverlay();
     }
+  }
+  addSearchHTMl() {
+    jquery__WEBPACK_IMPORTED_MODULE_0___default()('body').append(`
+        <div class="search-overlay">
+      <div class="search-overlay__top">
+        <div class="container">
+          <i class="fa fa-search search-overlay__icon" aria-hidden='true'></i>
+          <input type="text" placeholder="What are you looking for?" class="search-term" id="search-term">
+          <i class="fa fa-window-close search-overlay__close" aria-hidden='true'></i>
+        </div>
+      </div>
+            <div class="container">
+              <div id="search-overlay__results"></div>
+            </div>
+    </div>
+        `);
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (Search);

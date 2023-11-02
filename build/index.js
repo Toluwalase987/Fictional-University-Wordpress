@@ -190,21 +190,71 @@ class Search {
     this.openButton = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".js-search-trigger");
     this.closeButton = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".search-overlay__close");
     this.searchOverlay = jquery__WEBPACK_IMPORTED_MODULE_0___default()(".search-overlay");
+    this.searchField = jquery__WEBPACK_IMPORTED_MODULE_0___default()("#search-term");
     this.events();
+    this.isOverlayOpen = false;
+    this.typingTimer;
+    this.resultsDiv = jquery__WEBPACK_IMPORTED_MODULE_0___default()("#search-overlay__results");
+    this.isSpinnerVisible = false;
+    this.previousValue;
   }
 
   //Events
   events() {
     this.openButton.on("click", this.openOverlay.bind(this));
     this.closeButton.on("click", this.closeOverlay.bind(this));
+    jquery__WEBPACK_IMPORTED_MODULE_0___default()(document).on("keydown", this.keyPressDispatcher.bind(this));
+    this.searchField.on("keyup", this.typingLogic.bind(this));
   }
 
   //Methods
+  typingLogic() {
+    if (this.searchField.val() != this.previousValue) {
+      clearTimeout(this.typingTimer);
+      if (this.searchField.val()) {
+        if (!this.isSpinnerVisible) {
+          this.resultsDiv.html('<div class="spinner-loader"></div>');
+          this.isSpinnerVisible = true;
+        }
+        this.typingTimer = setTimeout(this.getResults.bind(this), 2000);
+      } else {
+        this.resultsDiv.html('');
+        this.isSpinnerVisible = false;
+      }
+    }
+    this.previousValue = this.searchField.val();
+  }
+  getResults() {
+    jquery__WEBPACK_IMPORTED_MODULE_0___default().getJSON('http://fictional-university.local/wp-json/wp/v2/posts?search=' + this.searchField.val(), posts => {
+      var testArray = ['red', 'orange', 'yellow'];
+      this.resultsDiv.html(`
+                <h2 class="search-overlay__section-title">General Information</h2>
+                ${posts.length ? '<ul class="link-list min-list">' : '<p>No general information matches that search</p>'}
+                    ${posts.map(item => {
+        return `<li><a href="${item.link}">${item.title.rendered}</a></li>`;
+      }).join('')}
+                ${posts.length ? '</ul>' : ''}
+            `);
+      this.isSpinnerVisible = false;
+    });
+  }
   openOverlay() {
     this.searchOverlay.addClass("search-overlay--active");
+    jquery__WEBPACK_IMPORTED_MODULE_0___default()('body').addClass("body-no-scroll");
+    this.isOverlayOpen = true;
   }
   closeOverlay() {
     this.searchOverlay.removeClass("search-overlay--active");
+    jquery__WEBPACK_IMPORTED_MODULE_0___default()('body').removeClass("body-no-scroll");
+    this.isOverlayOpen = false;
+  }
+  keyPressDispatcher(e) {
+    if (e.keyCode === 83 && !this.isOverlayOpen && !jquery__WEBPACK_IMPORTED_MODULE_0___default()("input, textarea").is(':focus')) {
+      this.openOverlay();
+    }
+    if (e.keyCode === 27 && this.isOverlayOpen) {
+      this.closeOverlay();
+    }
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (Search);
